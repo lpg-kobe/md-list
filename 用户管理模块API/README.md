@@ -1,6 +1,6 @@
 # *用户管理API SERVICE*
 
-## 流程
+## 流程说明
 
 1. 默认分配固定个数管理员账号，一个用户ID可对应多个账号管理员可通过该账号新建子账号并针对子账号设定操作链码管理组织等权限
 2. 未登录账号可通过账号密码登录并生成登录token
@@ -12,22 +12,41 @@
 
 ## 接口设计
 
+- 统一状态码
+    * success：
+    ```js
+    {
+        code: 200,
+        status: true,
+        msg: 'success'
+    }
+    ```
+
+    * fail：
+    ```js
+    {
+        code: 500,
+        status: false,
+        msg: 'failed'
+    }
+    ```
+
 - 登录
     * 入参：
     ```js
     { // body
-        account: '' [VARCHART],
-        password: '' [VARCHART]
+        account: '' [String], // 登录账号
+        password: '' [String] // 登录密码
     }
     ```
     * 出参：
     ```js
     {
-        code: 200 INT,
+        code: 200, // 状态码
         data:{
-            token: '' [VARCHART]
+            token: '' [String] // 返回的用户token
         },
-        msg: 'success' [VARCHART]
+        msg: 'success' [String] // 返回信息说明
     }
     ```
 
@@ -35,17 +54,17 @@
     * 入参：
     ```js
     { // header
-        token: '' [VARCHART]
+        token: '' [String] // 用户token
     }
     ```
     * 出参：
     ```js
     {
-        code: 999 INT,
-        data:{
-            status: false [INT]
+        code: 999 , // token校验状态码，999已过期，200生效中
+        data: {
+            status: false [Boolean]
         },
-        msg: 'token已过期' [VARCHART]
+        msg: 'token已过期' [String] // token说明
     }
     ```
 
@@ -59,11 +78,11 @@
     * 出参：
     ```js
     {
-        code: 200 INT,
+        code: 200 [Number],
         data:{
-            status: true [INT]
+            status: true [Boolean]
         },
-        msg: 'success' [VARCHART]
+        msg: 'success' [String]
     }
     ```
 
@@ -71,7 +90,7 @@
     * 入参：
     ```js
     {   // header
-        BASS-TOKEN: '' [VARCHART]
+        BAAS-TOKEN: '' [String] // 
         // body
         userId: '' [VARCHART],
         orgIds: 'id,id' [VARCHART]
@@ -92,7 +111,7 @@
     * 入参：
     ```js
     {   // header
-        BASS-TOKEN: '' [VARCHART]
+        BAAS-TOKEN: '' [VARCHART]
         // body
         userId: '' [VARCHART],
         orgIds: 'id,id' [VARCHART]
@@ -109,33 +128,52 @@
     }
     ```
 
-- 更新推送列表
+- 推送列表
     * 入参：
     ```js
     {   // header
-        BASS-TOKEN: '' [VARCHART]
+        BAAS-TOKEN: '', [String] // 用户token请求头
+        // body
+        data: {}
+    }
+    ```
+    * 出参：
+    ```js
+    {
+        code: 200,
+        data: {
+            list: [{
+                fromName: 'fromName', [String] // 发起者名称
+                fromId: 'fromId', [String] // 发起者id
+                type: 0 [Number], // 0加入联盟 1退出联盟 2加入账本 3退出账本
+                isRead: 0, [Boolean], // 是否已读 0未读1已读
+                contain: 'XXX正在申请XXX' // 通知内容 
+            }]
+        },
+        msg: 'success' [String]
+    }
+    ```
+
+- 更新推送列表状态
+    * 入参：
+    ```js
+    {   // header
+        BAAS-TOKEN: '', [String] // 用户token请求头
         // body
         data: {
-            fromId: 'formId', [VARCHART]
-            toId: 'toId' , [VARCHART]
-            type: 0 [VARCHART], // ['加入组织','退出组织']
-            isRead: 0, [INT]
+            id: '', // 消息id
+            isRead: 0, // 状态 0未读 1已读
         }
     }
     ```
     * 出参：
     ```js
     {
-        code: 200 INT,
+        code: 200,
         data: {
-            list: [{
-                type: 0 [VARCHART], // ['加入组织','退出组织']
-                fromId: '' [VARCHART],
-                fromName: '' [VARCHART],
-                isRead: 0, [INT]
-            }]
+            status: true
         },
-        msg: 'success' [VARCHART]
+        msg: 'success' [String]
     }
     ```
 
@@ -143,11 +181,10 @@
 
 - 用户信息表
 
-```shell
- id | account  | password | 
-----+----------+----------+----------------
- A1 | bob      | a1b23f2c | ...
- A2 | adam     | c0932f32 | ...
+```js
+ id: // 用户id，唯一字符串，识别用户身份，存储类型VARCHART
+ account: // 用户账号，存储类型VARCHART
+ password: // 用户账号，存储类型VARCHART
 ```
 
 - 用户token关联表

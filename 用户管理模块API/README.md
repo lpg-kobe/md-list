@@ -45,6 +45,8 @@
         code: 200, // 状态码
         data:{
             token: '' [String] // 返回的用户token
+            user_id: '' [String] // 返回的user_id
+            token_pass_time: '' [String] // 返回的token失效时间
         },
         msg: 'success' [String] // 返回信息说明
     }
@@ -143,10 +145,10 @@
         code: 200,
         data: {
             list: [{
-                fromName: 'fromName', [String] // 发起者名称
-                fromId: 'fromId', [String] // 发起者id
+                from_name: 'fromName', [String] // 发起者名称
+                from_id: 'fromId', [String] // 发起者id
                 type: 0 [Number], // 0加入联盟 1退出联盟 2加入账本 3退出账本
-                isRead: 0, [Boolean], // 是否已读 0未读1已读
+                status: 0, [Boolean], // 消息状态 0未读 1已读
                 contain: 'XXX正在申请XXX' // 通知内容 
             }]
         },
@@ -162,7 +164,7 @@
         // body
         data: {
             id: '', // 消息id
-            isRead: 0, // 状态 0未读 1已读
+            status: 0, // 消息状态 0未读 1已读
         }
     }
     ```
@@ -184,7 +186,8 @@
         BAAS-TOKEN: '', [String] // 用户token请求头
         // body
         data: {
-            type: 0 [Number], // 推送类型 0加入联盟 1退出联盟 2加入账本 3退出账本
+            type: 0 [Number], // 推送类型 0加入联盟 1退出联盟 2加入账本 3退出账本 4安装链码
+            target_id: '' [String] // 事件对象id 联盟id|账本id|链码id
         }
     }
     ```
@@ -201,20 +204,36 @@
 
 ## 数据库表设计
 
-- 用户信息表
+- 公用表字段
 
 ```js
- id: // 用户id作为主键，唯一字符串，识别用户身份，存储类型VARCHART
- account: // 用户账号，存储类型VARCHART，长度设计3-50字符
- password: // 用户账号，存储类型VARCHART，长度设计3-50字符
+ id: // 递增id
+ create_time: // 创建时间
+ update_time: // 更新时间
+``` 
+
+- 用户信息表，可扩展用户信息详情
+
+```js
+ user_login_id: // 用户id作为主键，唯一字符串，识别用户身份，存储类型VARCHART
+ user_login_name: // 用户登录名，存储类型VARCHART，长度设计3-50字符
+ user_login_type: // 用户账号身份，0管理员 1普通用户，存储类型INT
+```
+
+- 用户账号表
+
+```js
+ user_login_id: // 用户id作为主键，唯一字符串，识别用户身份，存储类型VARCHART
+ user_login_account: // 用户账号，存储类型VARCHART，长度设计3-50字符
+ user_login_password: // 用户账号，存储类型VARCHART，长度设计3-50字符
 ```
 
 - 用户token关联表
 
 ```js
- id: // 用户id作为外键，用来关联用户信息表中的用户，存储类型VARCHART
+ user_login_id: // 用户id作为外键，用来关联用户信息表中的用户，存储类型VARCHART
  token: // 用户token，每登陆用户账号时根据外键id查询并更新该id对应的token值，存储类型VARCHART
- pass_time: // 用户token过期时间，每登陆用户账号时根据外键id查询并更新token的失效时间，退出登陆的同时将该值更新为0，存储类型VARCHART
+ token_pass_time: // 用户token过期时间，每登陆用户账号时根据外键id查询并更新token的失效时间，退出登陆的同时将该值更新为0，存储类型VARCHART
 ```
 
 - 消息列表
@@ -223,8 +242,10 @@
  id: // 递增id作为主键，用来查询详情
  fromName: // 消息发起者名称，存储类型VARCHART，长度设计3-50字符
  fromId: // 消息发起者id，存储类型VARCHART
- type: // 消息自定义类型，0加入联盟 1退出联盟 2加入账本 3退出账本，存储类型INT
- isRead: // 消息是否已读 0未读 1已读 更新消息状态的时候用到，新增的时候默认为0，存储类型INT
+ type: // 消息自定义类型，0加入联盟 1退出联盟 2加入账本 3退出账本 4安装链码，存储类型INT
+ status: // 消息状态 0未读 1已读 更新消息状态的时候用到，新增的时候默认为0，存储类型INT
+ target_id: // 事件对象id 联盟id|账本id|链码id 存储类型VARCHART
+ target_name: // 事件对象名称 联盟名称|账本名称|链码名称 存储类型VARCHART
  contain: // 通知内容，用来前端展示消息列表通知内容，存储类型VARCHART
 ```
 
